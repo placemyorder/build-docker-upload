@@ -1,0 +1,18 @@
+name: 'Build and Upload Docker Image to Ecr'
+description: 'Build and Deploy Docker Image to Ecr'
+inputs:
+  serviceName:
+    description: 'The name of the service'
+    required: true
+  unittestpath:
+    description: 'The path of the unit test project'
+    required: true
+  buildNumber:
+    description: 'The current github build number'
+    required: true        
+  ecsRepoUrl:
+    description: 'The AWS ECS Repo url'
+    required: true                  
+runs:
+  using: 'node20'
+  main: 'index.js'
