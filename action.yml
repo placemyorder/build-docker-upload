@@ -15,7 +15,10 @@ inputs:
     required: true     
   rununittests:
     description: 'Flag to check if unit tests need to run'
-    default: 'false'                      
+    default: 'false'    
+  dockerfilename:
+    description: 'The docker file name'
+    default: ''                         
 runs:
   using: 'node20'
   main: 'index.js'

@@ -15,13 +15,17 @@ const unittestpath = core.getInput('unittestpath');
 const buildNumber = core.getInput('buildNumber');
 const ecsRepoUrl = core.getInput('ecsRepoUrl');
 const rununittests = core.getInput('rununittests');
-
-
+const dockerfilename = core.getInput('dockerfilename');
 
 
 const main = async () => {
     const scriptPath = path.join(__dirname, './entrypoint.sh');
     const command = `bash ${scriptPath} -s "${serviceName}" -u "${unittestpath}" -b "${buildNumber}" -e "${ecsRepoUrl}" -t "${rununittests}"`;
+
+    // Check if dockerfilename is not empty, and if so, add it to the command
+    if (dockerfilename) {
+        command += ` -d "${dockerfilename}"`;
+    }
 
     const output = execSync(command,{ encoding: 'utf8' });
      // Log the output (for debugging)

@@ -2,7 +2,7 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -s <serviceName> -u <unittestpath> -b <buildNumber> -e <ecsRepoUrl> [-t <true|false>]"
+    echo "Usage: $0 -s <serviceName> -u <unittestpath> -b <buildNumber> -e <ecsRepoUrl> [-t <true|false>] [-d <dockerfileName>]"
     exit 1
 }
 
@@ -16,19 +16,21 @@ fi
 # Check if aws cli is installed
 if ! command -v aws &> /dev/null
 then
-    echo "AWS Cli is not installed. Please install AWS Cli to proceed."
+    echo "AWS CLI is not installed. Please install AWS CLI to proceed."
     exit 1
 fi
 
 # Parse parameters
 runTests="false"
-while getopts "s:u:b:e:t:" opt; do
+dockerfileName=""
+while getopts "s:u:b:e:t:d:" opt; do
     case "$opt" in
         s) serviceName="$OPTARG" ;;
         u) unittestpath="$OPTARG" ;;
         b) buildNumber="$OPTARG" ;;
         e) ecsRepoUrl="$OPTARG" ;;
         t) runTests="$OPTARG" ;;  # Optional flag to determine if unit tests should be run
+        d) dockerfileName="$OPTARG" ;;  # Optional Dockerfile name
         *) usage ;;
     esac
 done
@@ -38,9 +40,9 @@ if [ -z "$serviceName" ] || [ -z "$unittestpath" ] || [ -z "$buildNumber" ] || [
     usage
 fi
 
+dotnet restore --configfile ./Nuget.config
 # Execute unit tests if the flag is set to true
 if [ "$runTests" == "true" ]; then
-    dotnet restore --configfile ./Nuget.config
     dotnet test "$unittestpath" /p:CollectCoverage=true /p:Threshold=80
 
     # Exit if unit tests fail
@@ -49,9 +51,13 @@ if [ "$runTests" == "true" ]; then
     fi
 fi
 
-# Build Docker image
+# Build Docker image with optional Dockerfile
 buildTag="${serviceName}:${buildNumber}"
-docker build . -t "$buildTag"
+if [ -n "$dockerfileName" ]; then
+    docker build -f "$dockerfileName" . -t "$buildTag"
+else
+    docker build . -t "$buildTag"
+fi
 
 # Log in to AWS ECR
 echo "Logging into AWS ECR $ecsRepoUrl"
