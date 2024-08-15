@@ -14,12 +14,14 @@ const serviceName = core.getInput('serviceName');
 const unittestpath = core.getInput('unittestpath');
 const buildNumber = core.getInput('buildNumber');
 const ecsRepoUrl = core.getInput('ecsRepoUrl');
+const rununittests = core.getInput('rununittests');
+
 
 
 
 const main = async () => {
     const scriptPath = path.join(__dirname, './entrypoint.sh');
-    const command = `bash ${scriptPath} -s "${serviceName}" -u "${unittestpath}" -b "${buildNumber}" -e "${ecsRepoUrl}"`;
+    const command = `bash ${scriptPath} -s "${serviceName}" -u "${unittestpath}" -b "${buildNumber}" -e "${ecsRepoUrl}" -t "${rununittests}"`;
 
     const output = execSync(command,{ encoding: 'utf8' });
      // Log the output (for debugging)

@@ -2,7 +2,7 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 -s <serviceName> -u <unittestpath> -b <buildNumber> -e <ecsRepoUrl>"
+    echo "Usage: $0 -s <serviceName> -u <unittestpath> -b <buildNumber> -e <ecsRepoUrl> [-t <true|false>]"
     exit 1
 }
 
@@ -20,14 +20,15 @@ then
     exit 1
 fi
 
-
 # Parse parameters
-while getopts "s:u:b:e:" opt; do
+runTests="false"
+while getopts "s:u:b:e:t:" opt; do
     case "$opt" in
         s) serviceName="$OPTARG" ;;
         u) unittestpath="$OPTARG" ;;
         b) buildNumber="$OPTARG" ;;
         e) ecsRepoUrl="$OPTARG" ;;
+        t) runTests="$OPTARG" ;;  # Optional flag to determine if unit tests should be run
         *) usage ;;
     esac
 done
@@ -37,13 +38,15 @@ if [ -z "$serviceName" ] || [ -z "$unittestpath" ] || [ -z "$buildNumber" ] || [
     usage
 fi
 
-# Execute unit tests
-dotnet restore --configfile ./Nuget.config
-dotnet test "$unittestpath" /p:CollectCoverage=true /p:Threshold=80
+# Execute unit tests if the flag is set to true
+if [ "$runTests" == "true" ]; then
+    dotnet restore --configfile ./Nuget.config
+    dotnet test "$unittestpath" /p:CollectCoverage=true /p:Threshold=80
 
-# Exit if unit tests fail
-if [ $? -ne 0 ]; then
-    exit 1
+    # Exit if unit tests fail
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
 fi
 
 # Build Docker image

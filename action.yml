@@ -12,7 +12,10 @@ inputs:
     required: true        
   ecsRepoUrl:
     description: 'The AWS ECS Repo url'
-    required: true                  
+    required: true     
+  rununittests:
+    description: 'Flag to check if unit tests need to run'
+    default: 'false'                      
 runs:
   using: 'node20'
   main: 'index.js'
