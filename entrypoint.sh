@@ -7,9 +7,9 @@ usage() {
 }
 
 # Check if Docker is installed
-if ! command -v docker &> /dev/null
+if ! command -v docker &> /dev/null && ! alias docker &> /dev/null
 then
-    echo "Docker is not installed. Please install Docker to proceed."
+    echo "'docker' command not found or not aliased. Please install Docker or alias it to Podman."
     exit 1
 fi
 
