@@ -56,17 +56,38 @@ fi
 
 # Build Docker image with optional Dockerfile
 buildTag="${serviceName}:${buildNumber}"
-if [ -n "$dockerfileName" ]; then
-    $container_cmd build -f "$dockerfileName" . -t "$buildTag"
+
+if ["$container_cmd" == "docker"]; then
+    if [ -n "$dockerfileName" ]; then
+        docker build -f "$dockerfileName" . -t "$buildTag"
+    else
+        docker build . -t "$buildTag"
+    fi
 else
-    $container_cmd build . -t "$buildTag"
+    if [ -n "$dockerfileName" ]; then
+        podman build -f "$dockerfileName" . -t "$buildTag"
+    else
+        podman build . -t "$buildTag"
+    fi
 fi
+
 
 # Log in to AWS ECR
 echo "Logging into AWS ECR $ecsRepoUrl"
-aws ecr get-login-password | $container_cmd login --username AWS --password-stdin "$ecsRepoUrl"
+
+if ["$container_cmd" == "docker"]; then
+    aws ecr get-login-password | docker login --username AWS --password-stdin "$ecsRepoUrl"
+else
+    aws ecr get-login-password | podman login --username AWS --password-stdin "$ecsRepoUrl"
+fi
+
 
 # Tag and push the Docker image to ECR
 repoTag="${ecsRepoUrl}:${serviceName}_${buildNumber}"
-$container_cmd tag "$buildTag" "$repoTag"
-$container_cmd push "$repoTag"
+if ["$container_cmd" == "docker"]; then
+    docker tag "$buildTag" "$repoTag"
+    docker push "$repoTag"
+else
+    podman tag "$buildTag" "$repoTag"
+    podman push "$repoTag"
+fi
