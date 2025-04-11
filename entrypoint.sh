@@ -7,9 +7,12 @@ usage() {
 }
 
 # Check if Docker is installed
-if ! command -v docker &> /dev/null && ! alias docker &> /dev/null
-then
-    echo "'docker' command not found or not aliased. Please install Docker or alias it to Podman."
+if command -v docker &> /dev/null; then
+    container_cmd="docker"
+elif command -v podman &> /dev/null; then
+    container_cmd="podman"
+else
+    echo "Neither Docker nor Podman is installed. Please install one to proceed."
     exit 1
 fi
 
@@ -54,16 +57,16 @@ fi
 # Build Docker image with optional Dockerfile
 buildTag="${serviceName}:${buildNumber}"
 if [ -n "$dockerfileName" ]; then
-    docker build -f "$dockerfileName" . -t "$buildTag"
+    $container_cmd build -f "$dockerfileName" . -t "$buildTag"
 else
-    docker build . -t "$buildTag"
+    $container_cmd build . -t "$buildTag"
 fi
 
 # Log in to AWS ECR
 echo "Logging into AWS ECR $ecsRepoUrl"
-aws ecr get-login-password | docker login --username AWS --password-stdin "$ecsRepoUrl"
+aws ecr get-login-password | $container_cmd login --username AWS --password-stdin "$ecsRepoUrl"
 
 # Tag and push the Docker image to ECR
 repoTag="${ecsRepoUrl}:${serviceName}_${buildNumber}"
-docker tag "$buildTag" "$repoTag"
-docker push "$repoTag"
+$container_cmd tag "$buildTag" "$repoTag"
+$container_cmd push "$repoTag"
